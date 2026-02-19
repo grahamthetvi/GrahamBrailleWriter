@@ -29,12 +29,13 @@ async function initLiblouis() {
     // The package exposes a UMD/ESM module; adjust the import path to match
     // whichever build artefact is available after `npm install liblouis`.
     // @ts-ignore
-    const liblouis = await import(
-      /* @vite-ignore */ 'liblouis-js/build/liblouis'
-    );
+    // @ts-ignore
+    const liblouisModule = await import(/* @vite-ignore */ 'liblouis-js');
+    const liblouis = liblouisModule.default || liblouisModule;
 
     // liblouis-js exposes an async factory; initialise with the WASM blob URL.
-    const instance = await liblouis.default({ wasmBinaryFile: '/liblouis.wasm' });
+    // The default export might be the factory itself.
+    const instance = await (liblouis.default || liblouis)({ wasmBinaryFile: '/liblouis.wasm' });
     translateFn = (table: string, text: string) =>
       instance.translateString(table, text) as string;
 
