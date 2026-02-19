@@ -28,8 +28,9 @@ async function initLiblouis() {
     // Attempt to dynamically import liblouis-js.
     // The package exposes a UMD/ESM module; adjust the import path to match
     // whichever build artefact is available after `npm install liblouis`.
+    // @ts-ignore
     const liblouis = await import(
-      /* @vite-ignore */ 'liblouis/build/liblouis-no-tables'
+      /* @vite-ignore */ 'liblouis-js/build/liblouis'
     );
 
     // liblouis-js exposes an async factory; initialise with the WASM blob URL.
