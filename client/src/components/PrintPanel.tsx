@@ -40,7 +40,7 @@ export function PrintPanel({ brf, bridgeConnected }: PrintPanelProps) {
       <h3>Print to Embosser</h3>
 
       {!bridgeConnected && (
-        <p className="bridge-warning">
+        <p className="bridge-warning" role="status">
           Bridge not connected. Download and run the bridge binary to enable printing.
         </p>
       )}
@@ -62,9 +62,15 @@ export function PrintPanel({ brf, bridgeConnected }: PrintPanelProps) {
         {status === 'printing' ? 'Printing...' : 'Print'}
       </button>
 
-      {status === 'success' && <p className="status-ok">Sent to embosser successfully.</p>}
-      {status === 'error' && <p className="status-err">Error: {errorMsg}</p>}
-      {errorMsg && status === 'idle' && <p className="status-err">{errorMsg}</p>}
+      {status === 'success' && (
+        <p className="status-ok" aria-live="polite">Sent to embosser successfully.</p>
+      )}
+      {status === 'error' && (
+        <p className="status-err" role="alert">Error: {errorMsg}</p>
+      )}
+      {errorMsg && status === 'idle' && (
+        <p className="status-err" role="alert">{errorMsg}</p>
+      )}
     </div>
   );
 }
