@@ -57,7 +57,7 @@ interface LiblouisModule {
  * ~5 000 chars ≈ 900 words — a comfortable chunk for liblouis.
  */
 const CHUNK_THRESHOLD = 5_000;
-const CHUNK_MAX_SIZE  = 5_000;
+const CHUNK_MAX_SIZE = 5_000;
 
 /**
  * Split `text` into chunks no larger than `maxSize`, breaking preferentially
@@ -122,12 +122,12 @@ async function execRemoteScript(url: string): Promise<void> {
 
 const BASE = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
 
-let ready   = false;
+let ready = false;
 let liblouis: LiblouisEasyApi | undefined;
 
 async function init(): Promise<void> {
   // ── Step 1: detect & load WASM or asm.js build ──────────────────────────
-  const wasmUrl  = `${BASE}/wasm/liblouis.wasm`;
+  const wasmUrl = `${BASE}/wasm/liblouis.wasm`;
   const wasmResp = await fetch(wasmUrl);
   if (!wasmResp.ok) {
     throw new Error(
@@ -282,32 +282,7 @@ async function translateDocumentWithMath(text: string, textTable: string, mathCo
   return result;
 }
 
-/**
- * Splits text into sensible chunks, avoiding splitting mid-word or mid-math.
- */
-function splitIntoChunks(text: string, maxLen: number = 2000): string[] {
-  const chunks: string[] = [];
-  let current = 0;
-  while (current < text.length) {
-    if (text.length - current <= maxLen) {
-      chunks.push(text.slice(current));
-      break;
-    }
-    // Try to find a good break point
-    let breakIndex = current + maxLen;
-    const substr = text.slice(current, breakIndex);
-    // Find the last newline or space
-    const lastNewline = substr.lastIndexOf('\n');
-    const lastSpace = substr.lastIndexOf(' ');
-
-    // Prioritize newlines, then spaces. If neither, force break.
-    let offset = lastNewline > 0 ? lastNewline : (lastSpace > 0 ? lastSpace : maxLen);
-
-    chunks.push(text.slice(current, current + offset + 1));
-    current += offset + 1;
-  }
-  return chunks;
-}
+// (Removed duplicate splitIntoChunks function)
 
 // ─── Message handler ─────────────────────────────────────────────────────────
 
@@ -331,28 +306,18 @@ self.addEventListener('message', async (event: MessageEvent) => {
     return;
   }
 
-  const CHUNK_THRESHOLD = 5000;
-
   try {
     if (text.length <= CHUNK_THRESHOLD) {
       // ── Direct translation (small text) ─────────────────────────────────
-      const result = liblouis.translateString(table, text);
-      if (result === null) {
-        throw new Error(`translateString returned null — check table "${table}"`);
-      }
+      const result = await translateDocumentWithMath(text, table, mathCode);
       self.postMessage({ type: 'RESULT', result });
     } else {
       // ── Chunked translation (large text) ─────────────────────────────────
-      const chunks  = splitIntoChunks(text);
+      const chunks = splitIntoChunks(text);
       const results: string[] = [];
 
       for (let i = 0; i < chunks.length; i++) {
-        const part = liblouis.translateString(table, chunks[i]);
-        if (part === null) {
-          throw new Error(
-            `translateString returned null on chunk ${i + 1}/${chunks.length} — check table "${table}"`
-          );
-        }
+        const part = await translateDocumentWithMath(chunks[i], table, mathCode);
         results.push(part);
 
         // Report progress after each chunk (received by main thread in real-time

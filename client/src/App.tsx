@@ -3,7 +3,7 @@ import { Editor } from './components/Editor';
 import { PrintPanel } from './components/PrintPanel';
 import { StatusBar } from './components/StatusBar';
 import { startBridgeStatusPolling } from './services/bridge-client';
-import { useBraille, type BrailleTable, type MathCode } from './hooks/useBraille';
+import { useBraille, type MathCode } from './hooks/useBraille';
 import { asciiToUnicodeBraille } from './utils/braille';
 import { formatBrfPages, formatBrfForOutput } from './utils/brailleFormat';
 import { TABLE_GROUPS, DEFAULT_TABLE } from './utils/tableRegistry';
@@ -47,7 +47,8 @@ const DEFAULT_PAGE_SETTINGS: PageSettings = { cellsPerRow: 40, linesPerPage: 25 
 
 export default function App() {
   const [bridgeConnected, setBridgeConnected] = useState(false);
-  const [selectedTable, setSelectedTable]     = useState(DEFAULT_TABLE);
+  const [selectedTable, setSelectedTable] = useState(DEFAULT_TABLE);
+  const [mathCode, setMathCode] = useState<MathCode>('nemeth');
 
   // ── Theme management ─────────────────────────────────────────────────────
   const [theme, setTheme] = useState<Theme>(() => {
@@ -95,11 +96,6 @@ export default function App() {
   const wordCount = inputText.trim() === '' ? 0 : inputText.trim().split(/\s+/).length;
   const charCount = inputText.length;
 
-  // Re-translate when text or settings change
-  useEffect(() => {
-    translate(currentText, brailleTable, mathCode);
-  }, [currentText, brailleTable, mathCode, translate]);
-
   // ── Bridge status polling ────────────────────────────────────────────────
   useEffect(() => {
     const stopPolling = startBridgeStatusPolling(setBridgeConnected);
@@ -110,18 +106,20 @@ export default function App() {
   const handleTextChange = useCallback((text: string) => {
     setInputText(text);
     if (text.trim()) {
-      translate(text, selectedTable);
+      translate(text, selectedTable, mathCode);
     }
-  }, [translate, selectedTable]);
+  }, [translate, selectedTable, mathCode]);
 
   // ── Re-translate when table changes ─────────────────────────────────────
   const prevTableRef = useRef(selectedTable);
+  const prevMathRef = useRef(mathCode);
   useEffect(() => {
-    if (selectedTable !== prevTableRef.current && inputText.trim()) {
+    if ((selectedTable !== prevTableRef.current || mathCode !== prevMathRef.current) && inputText.trim()) {
       prevTableRef.current = selectedTable;
-      translate(inputText, selectedTable);
+      prevMathRef.current = mathCode;
+      translate(inputText, selectedTable, mathCode);
     }
-  }, [selectedTable, inputText, translate]);
+  }, [selectedTable, mathCode, inputText, translate]);
 
   // ── File upload ──────────────────────────────────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,7 +135,7 @@ export default function App() {
       const text = ev.target?.result as string;
       setInputText(text);
       setFileContent(text);
-      translate(text, selectedTable);
+      translate(text, selectedTable, mathCode);
     };
     reader.readAsText(file, 'utf-8');
     // Reset input so the same file can be re-loaded if needed
@@ -153,9 +151,9 @@ export default function App() {
       pageSettings.linesPerPage,
     );
     const blob = new Blob([formatted], { type: 'text/plain;charset=utf-8' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
     a.download = 'output.brf';
     a.click();
     URL.revokeObjectURL(url);
@@ -216,6 +214,22 @@ export default function App() {
                 ))}
               </optgroup>
             ))}
+          </select>
+
+          {/* Math Code selector */}
+          <label className="toolbar-label" htmlFor="math-select">
+            Math Focus
+          </label>
+          <select
+            id="math-select"
+            className="table-select"
+            value={mathCode}
+            onChange={(e) => setMathCode(e.target.value as MathCode)}
+            title="Select math braille code"
+            aria-label="Select math braille code"
+          >
+            <option value="nemeth">Nemeth</option>
+            <option value="ueb">UEB Math</option>
           </select>
 
           {/* Worker ready indicator */}

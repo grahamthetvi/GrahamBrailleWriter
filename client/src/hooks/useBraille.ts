@@ -16,9 +16,12 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+export type BrailleTable = 'en-ueb-g2.ctb' | 'en-ueb-g1.ctb' | 'en-us-g1.ctb' | 'en-us-g2.ctb';
+export type MathCode = 'nemeth' | 'ueb';
+
 export interface UseBrailleReturn {
-  /** Call this with plain text and an optional liblouis table filename. */
-  translate: (text: string, table?: string) => void;
+  /** Call this with plain text and an optional liblouis table filename and math code. */
+  translate: (text: string, table?: string, mathCode?: MathCode) => void;
   /** The most recent translated BRF string (Braille ASCII). */
   translatedText: string;
   /** True while the worker is initialising or a translation is in flight. */
@@ -38,10 +41,10 @@ export function useBraille(): UseBrailleReturn {
   const workerRef = useRef<Worker | null>(null);
 
   const [translatedText, setTranslatedText] = useState('');
-  const [isLoading, setIsLoading]           = useState(true);   // true until READY
-  const [progress, setProgress]             = useState(0);
-  const [error, setError]                   = useState<string | null>(null);
-  const [workerReady, setWorkerReady]       = useState(false);
+  const [isLoading, setIsLoading] = useState(true);   // true until READY
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [workerReady, setWorkerReady] = useState(false);
 
   // -------------------------------------------------------------------------
   // Spawn / tear down the worker
@@ -55,9 +58,9 @@ export function useBraille(): UseBrailleReturn {
     worker.addEventListener('message', (e: MessageEvent) => {
       const msg = e.data as
         | { type: 'READY' }
-        | { type: 'RESULT';   result:  string }
+        | { type: 'RESULT'; result: string }
         | { type: 'PROGRESS'; percent: number }
-        | { type: 'ERROR';    error:   string };
+        | { type: 'ERROR'; error: string };
 
       if (msg.type === 'READY') {
         setWorkerReady(true);
@@ -90,7 +93,7 @@ export function useBraille(): UseBrailleReturn {
   // -------------------------------------------------------------------------
   // Public translate function
   // -------------------------------------------------------------------------
-  const translate = useCallback((text: string, table = 'en-ueb-g2.ctb') => {
+  const translate = useCallback((text: string, table = 'en-ueb-g2.ctb', mathCode: MathCode = 'nemeth') => {
     if (!workerRef.current) return;
     setIsLoading(true);
     setProgress(0);
