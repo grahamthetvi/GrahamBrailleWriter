@@ -18,7 +18,7 @@
  *   3. Enables on-demand table loading from public/tables/.
  *
  * Message protocol  (main → worker):
- *   { text: string, table?: string }
+ *   { text: string, table?: string, mathCode?: string }
  *
  * Message protocol  (worker → main):
  *   { type: 'READY' }
@@ -156,17 +156,20 @@ import katex from 'katex';
 // @ts-expect-error - no types available for speech-rule-engine
 import * as sre from 'speech-rule-engine';
 
-// Initialize SRE for Nemeth Braille output once upon first translation
-let sreInitialized = false;
-async function ensureSreReady() {
-  if (sreInitialized) return;
+// Initialize SRE for Nemeth or UEB Braille output
+let currentMathCode = '';
+
+async function ensureSreReady(mathCode: string) {
+  if (currentMathCode === mathCode) return;
+  const domain = mathCode === 'nemeth' ? 'nemeth' : 'default';
+  const locale = mathCode === 'nemeth' ? 'nemeth' : 'en';
   await sre.setupEngine({
-    domain: 'nemeth',
+    domain: domain,
     modality: 'braille',
     // We don't need spoken output, just the braille ascii
-    locale: 'nemeth',
+    locale: locale,
   });
-  sreInitialized = true;
+  currentMathCode = mathCode;
 }
 
 // ─── Math Pipeline Helpers ──────────────────────────────────────────────────
@@ -185,12 +188,12 @@ function cleanMathML(mathml: string): string {
 }
 
 /**
- * Translates LaTeX math into Nemeth Braille Code
+ * Translates LaTeX math into Nemeth or UEB math Braille Code
  */
-async function translateMath(latex: string): Promise<string> {
+async function translateMath(latex: string, mathCode: string): Promise<string> {
   try {
-    // Ensure the engine is booted
-    await ensureSreReady();
+    // Ensure the engine is booted for appropriate format
+    await ensureSreReady(mathCode);
 
     // 1. Convert LaTeX to MathML string
     const katexHtml = katex.renderToString(latex, {
@@ -213,7 +216,7 @@ async function translateMath(latex: string): Promise<string> {
 /**
  * Extracts math blocks, translates them, and translates the surrounding text.
  */
-async function translateDocumentWithMath(text: string, textTable: string): Promise<string> {
+async function translateDocumentWithMath(text: string, textTable: string, mathCode: string): Promise<string> {
   if (!liblouis) return '';
 
   // Regex to match block math $$...$$ and inline math \(...\)
@@ -235,7 +238,7 @@ async function translateDocumentWithMath(text: string, textTable: string): Promi
     const latex = match[2] !== undefined ? match[2] : match[4];
 
     // Translate the math
-    const mathResult = await translateMath(latex);
+    const mathResult = await translateMath(latex, mathCode);
     result += mathResult;
 
     lastIndex = mathRegex.lastIndex;
@@ -250,12 +253,40 @@ async function translateDocumentWithMath(text: string, textTable: string): Promi
   return result;
 }
 
+/**
+ * Splits text into sensible chunks, avoiding splitting mid-word or mid-math.
+ */
+function splitIntoChunks(text: string, maxLen: number = 2000): string[] {
+  const chunks: string[] = [];
+  let current = 0;
+  while (current < text.length) {
+    if (text.length - current <= maxLen) {
+      chunks.push(text.slice(current));
+      break;
+    }
+    // Try to find a good break point
+    let breakIndex = current + maxLen;
+    const substr = text.slice(current, breakIndex);
+    // Find the last newline or space
+    const lastNewline = substr.lastIndexOf('\n');
+    const lastSpace = substr.lastIndexOf(' ');
+
+    // Prioritize newlines, then spaces. If neither, force break.
+    let offset = lastNewline > 0 ? lastNewline : (lastSpace > 0 ? lastSpace : maxLen);
+
+    chunks.push(text.slice(current, current + offset + 1));
+    current += offset + 1;
+  }
+  return chunks;
+}
+
 // ─── Message handler ─────────────────────────────────────────────────────────
 
 self.addEventListener('message', async (event: MessageEvent) => {
-  const { text, table = 'en-ueb-g2.ctb' } = event.data as {
+  const { text, table = 'en-ueb-g2.ctb', mathCode = 'nemeth' } = event.data as {
     text: string;
     table?: string;
+    mathCode?: string;
   };
 
   if (!ready || !liblouis) {
@@ -271,11 +302,29 @@ self.addEventListener('message', async (event: MessageEvent) => {
     return;
   }
 
+  const CHUNK_THRESHOLD = 5000;
+
   try {
-    // Check if the nemeth table is loaded on demand if needed, otherwise rely on the base table.
-    // Use the math-aware translation pipeline
-    const result = await translateDocumentWithMath(text, table);
-    self.postMessage({ type: 'RESULT', result });
+    if (text.length <= CHUNK_THRESHOLD) {
+      // ── Direct translation (small text) ─────────────────────────────────
+      const result = await translateDocumentWithMath(text, table, mathCode);
+      self.postMessage({ type: 'RESULT', result });
+    } else {
+      // ── Chunked translation (large text) ─────────────────────────────────
+      const chunks = splitIntoChunks(text, CHUNK_THRESHOLD);
+      const results: string[] = [];
+
+      for (let i = 0; i < chunks.length; i++) {
+        const part = await translateDocumentWithMath(chunks[i], table, mathCode);
+        results.push(part);
+
+        // Report progress after each chunk
+        const percent = Math.round(((i + 1) / chunks.length) * 100);
+        self.postMessage({ type: 'PROGRESS', percent });
+      }
+
+      self.postMessage({ type: 'RESULT', result: results.join('') });
+    }
   } catch (err) {
     self.postMessage({
       type: 'ERROR',

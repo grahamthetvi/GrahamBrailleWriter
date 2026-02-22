@@ -16,10 +16,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type BrailleTable = 'en-ueb-g2.ctb' | 'en-ueb-g1.ctb' | 'en-us-g1.ctb' | 'en-us-g2.ctb';
+export type MathCode = 'nemeth' | 'ueb';
 
 export interface UseBrailleReturn {
   /** Call this with plain text to request a translation. */
-  translate: (text: string, table?: BrailleTable) => void;
+  translate: (text: string, table?: BrailleTable, mathCode?: MathCode) => void;
   /** The most recent translated BRF string (Braille ASCII). */
   translatedText: string;
   /** True while the worker is initialising or a translation is in flight. */
@@ -34,9 +35,9 @@ export function useBraille(): UseBrailleReturn {
   const workerRef = useRef<Worker | null>(null);
 
   const [translatedText, setTranslatedText] = useState('');
-  const [isLoading, setIsLoading]           = useState(true);   // true until READY
-  const [error, setError]                   = useState<string | null>(null);
-  const [workerReady, setWorkerReady]       = useState(false);
+  const [isLoading, setIsLoading] = useState(true);   // true until READY
+  const [error, setError] = useState<string | null>(null);
+  const [workerReady, setWorkerReady] = useState(false);
 
   // -------------------------------------------------------------------------
   // Spawn / tear down the worker
@@ -52,7 +53,7 @@ export function useBraille(): UseBrailleReturn {
       const msg = e.data as
         | { type: 'READY' }
         | { type: 'RESULT'; result: string }
-        | { type: 'ERROR';  error:  string };
+        | { type: 'ERROR'; error: string };
 
       if (msg.type === 'READY') {
         setWorkerReady(true);
@@ -82,11 +83,11 @@ export function useBraille(): UseBrailleReturn {
   // -------------------------------------------------------------------------
   // Public translate function
   // -------------------------------------------------------------------------
-  const translate = useCallback((text: string, table: BrailleTable = 'en-ueb-g2.ctb') => {
+  const translate = useCallback((text: string, table: BrailleTable = 'en-ueb-g2.ctb', mathCode: MathCode = 'nemeth') => {
     if (!workerRef.current) return;
     setIsLoading(true);
     setError(null);
-    workerRef.current.postMessage({ text, table });
+    workerRef.current.postMessage({ text, table, mathCode });
   }, []);
 
   return { translate, translatedText, isLoading, error, workerReady };

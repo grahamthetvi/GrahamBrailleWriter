@@ -3,7 +3,7 @@ import { Editor } from './components/Editor';
 import { PrintPanel } from './components/PrintPanel';
 import { StatusBar } from './components/StatusBar';
 import { startBridgeStatusPolling } from './services/bridge-client';
-import { useBraille } from './hooks/useBraille';
+import { useBraille, type BrailleTable, type MathCode } from './hooks/useBraille';
 import { asciiToUnicodeBraille } from './utils/braille';
 import './App.css';
 
@@ -25,6 +25,10 @@ export default function App() {
   const [bridgeConnected, setBridgeConnected] = useState(false);
   const { translate, translatedText, isLoading, error, workerReady } = useBraille();
 
+  const [brailleTable, setBrailleTable] = useState<BrailleTable>('en-ueb-g2.ctb');
+  const [mathCode, setMathCode] = useState<MathCode>('nemeth');
+  const [currentText, setCurrentText] = useState('');
+
   // ── Integration test widget state ────────────────────────────────────────
   const [testInput, setTestInput] = useState('Hello Braille world!');
   const [testOutput, setTestOutput] = useState('');
@@ -38,6 +42,11 @@ export default function App() {
     }
   }, [translatedText]);
 
+  // Re-translate when text or settings change
+  useEffect(() => {
+    translate(currentText, brailleTable, mathCode);
+  }, [currentText, brailleTable, mathCode, translate]);
+
   // ── Bridge status polling ────────────────────────────────────────────────
   useEffect(() => {
     const stopPolling = startBridgeStatusPolling(setBridgeConnected);
@@ -46,12 +55,12 @@ export default function App() {
 
   // ── Monaco editor handler ────────────────────────────────────────────────
   function handleTextChange(text: string) {
-    translate(text);
+    setCurrentText(text);
   }
 
   // ── Integration test handler ─────────────────────────────────────────────
   function handleTranslateClick() {
-    translate(testInput);
+    translate(testInput, brailleTable, mathCode);
   }
 
   return (
@@ -153,7 +162,35 @@ export default function App() {
 
       <main className="app-main">
         <section className="editor-pane">
-          <h2>Text Input</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2>Text Input</h2>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div>
+                <label style={{ fontSize: '0.9rem', marginRight: '0.5rem' }}>Text Table:</label>
+                <select
+                  value={brailleTable}
+                  onChange={(e) => setBrailleTable(e.target.value as BrailleTable)}
+                  style={{ padding: '0.2rem', background: '#333', color: '#fff', border: '1px solid #555' }}
+                >
+                  <option value="en-ueb-g2.ctb">UEB Grade 2</option>
+                  <option value="en-ueb-g1.ctb">UEB Grade 1</option>
+                  <option value="en-us-g2.ctb">EBAE Grade 2</option>
+                  <option value="en-us-g1.ctb">EBAE Grade 1</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: '0.9rem', marginRight: '0.5rem' }}>Math Code:</label>
+                <select
+                  value={mathCode}
+                  onChange={(e) => setMathCode(e.target.value as MathCode)}
+                  style={{ padding: '0.2rem', background: '#333', color: '#fff', border: '1px solid #555' }}
+                >
+                  <option value="nemeth">Nemeth</option>
+                  <option value="ueb">UEB Math</option>
+                </select>
+              </div>
+            </div>
+          </div>
           <Editor onTextChange={handleTextChange} />
         </section>
 
