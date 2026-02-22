@@ -18,10 +18,47 @@ import './App.css';
  *   • Translated BRF displayed as Unicode braille in the preview pane.
  *   • Download button exports the raw BRF file.
  *   • PrintPanel sends BRF to the optional local Go bridge for embosser printing.
+ *   • Theme toggle cycles dark → light → high-contrast, persisted to localStorage.
  */
+
+type Theme = 'dark' | 'light' | 'high-contrast';
+
+const monacoThemeMap: Record<Theme, string> = {
+  dark: 'vs-dark',
+  light: 'vs',
+  'high-contrast': 'hc-black',
+};
+
+const themeLabels: Record<Theme, string> = {
+  dark: 'Light',
+  light: 'Hi-Con',
+  'high-contrast': 'Dark',
+};
+
 export default function App() {
   const [bridgeConnected, setBridgeConnected] = useState(false);
   const [selectedTable, setSelectedTable]     = useState(DEFAULT_TABLE);
+
+  // ── Theme management ─────────────────────────────────────────────────────
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem('braille-vibe-theme') as Theme | null;
+    return stored ?? 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    localStorage.setItem('braille-vibe-theme', theme);
+  }, [theme]);
+
+  function cycleTheme() {
+    setTheme(prev =>
+      prev === 'dark' ? 'light' : prev === 'light' ? 'high-contrast' : 'dark'
+    );
+  }
 
   const { translate, translatedText, isLoading, progress, error, workerReady } =
     useBraille();
@@ -88,6 +125,9 @@ export default function App() {
 
   return (
     <div className="app-layout">
+      {/* Skip navigation link for keyboard and screen reader users */}
+      <a className="skip-link" href="#main-content">Skip to main content</a>
+
       {/* ── Header toolbar ───────────────────────────────────────────────── */}
       <header className="app-header">
         <div className="app-title">
@@ -106,6 +146,7 @@ export default function App() {
             value={selectedTable}
             onChange={(e) => setSelectedTable(e.target.value)}
             title="Select a liblouis braille translation table"
+            aria-label="Select braille translation table"
           >
             {TABLE_GROUPS.map((group) => (
               <optgroup key={group.group} label={group.group}>
@@ -120,17 +161,22 @@ export default function App() {
 
           {/* Worker ready indicator */}
           <span
+            role="status"
+            aria-live="polite"
+            aria-label={workerReady ? 'liblouis WASM ready' : 'Loading liblouis WASM'}
             className={`worker-indicator ${workerReady ? 'ready' : 'loading'}`}
             title={workerReady ? 'liblouis WASM ready' : 'Loading liblouis…'}
           >
             {workerReady ? '● Ready' : '● Loading…'}
           </span>
 
-          {/* File upload */}
+          {/* File upload — input is screen-reader-hidden; button is the control */}
           <input
             ref={fileInputRef}
             type="file"
             accept=".txt,.text,.md,.rst,.adoc"
+            aria-hidden="true"
+            tabIndex={-1}
             style={{ display: 'none' }}
             onChange={handleFileUpload}
           />
@@ -138,6 +184,7 @@ export default function App() {
             className="toolbar-btn"
             onClick={() => fileInputRef.current?.click()}
             title="Load a text file for translation"
+            aria-label="Open text file for translation"
           >
             Open File
           </button>
@@ -148,23 +195,41 @@ export default function App() {
             onClick={handleDownloadBrf}
             disabled={!translatedText}
             title="Download the translated BRF file"
+            aria-label="Download translated BRF file"
           >
             Download BRF
+          </button>
+
+          {/* Theme toggle */}
+          <button
+            className="theme-toggle"
+            onClick={cycleTheme}
+            aria-label={`Switch theme (current: ${theme}). Click to switch to ${themeLabels[theme]} theme.`}
+            title="Cycle theme: dark → light → high contrast"
+          >
+            {themeLabels[theme]}
           </button>
         </div>
       </header>
 
       {/* ── Main two-pane layout ─────────────────────────────────────────── */}
-      <main className="app-main">
+      <main id="main-content" className="app-main">
         {/* Left pane: text editor */}
         <section className="editor-pane">
           <div className="pane-title">Text Input</div>
-          <Editor onTextChange={handleTextChange} />
+          <Editor
+            onTextChange={handleTextChange}
+            monacoTheme={monacoThemeMap[theme]}
+          />
         </section>
 
         {/* Right pane: braille preview + print panel */}
         <aside className="side-pane">
-          <section className="brf-preview">
+          <section
+            className="brf-preview"
+            aria-label="Braille preview output"
+            aria-live="polite"
+          >
             <div className="pane-title">
               BRF Preview
               {isLoading && translatedText && (
@@ -174,22 +239,34 @@ export default function App() {
 
             {/* Progress bar for chunked large-document translation */}
             {isLoading && progress > 0 && progress < 100 && (
-              <div className="progress-bar-wrap" role="progressbar" aria-valuenow={progress}>
+              <div
+                className="progress-bar-wrap"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Translation progress"
+              >
                 <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
                 <span className="progress-label">{progress}%</span>
               </div>
             )}
 
             {error && (
-              <p className="translation-error">
+              <p className="translation-error" role="alert">
                 Translation error: {error}
               </p>
             )}
 
             {unicodeBraille ? (
-              <pre className="brf-output">{unicodeBraille}</pre>
+              <pre
+                className="brf-output"
+                aria-label="Unicode braille output"
+              >
+                {unicodeBraille}
+              </pre>
             ) : (
-              <p className="brf-placeholder">
+              <p className="brf-placeholder" aria-live="polite">
                 {workerReady
                   ? 'Type in the editor or open a file to see braille output.'
                   : 'Loading liblouis WASM…'}

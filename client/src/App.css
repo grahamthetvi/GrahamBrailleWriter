@@ -1,5 +1,6 @@
 /* ============================================================
    Braille Vibe — Application Layout
+   All colors use CSS custom properties defined in index.css.
    ============================================================ */
 
 *, *::before, *::after {
@@ -9,8 +10,8 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #1a1a2e;
-  color: #e0e0e0;
+  background: var(--bg);
+  color: var(--text-primary);
 }
 
 #root {
@@ -26,8 +27,9 @@ body {
 
 .app-header {
   padding: 0.5rem 1rem;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -44,14 +46,14 @@ body {
 .app-header h1 {
   margin: 0;
   font-size: 1.3rem;
-  color: #e94560;
+  color: var(--accent);
   white-space: nowrap;
 }
 
 .subtitle {
   margin: 0;
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -67,7 +69,7 @@ body {
 
 .toolbar-label {
   font-size: 0.78rem;
-  color: #aaa;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
@@ -76,29 +78,29 @@ body {
   min-width: 260px;
   max-width: 420px;
   padding: 0.35rem 0.6rem;
-  background: #0d1117;
-  color: #e0e0e0;
-  border: 1px solid #30363d;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.82rem;
   cursor: pointer;
 }
 
-.table-select:focus {
-  outline: 2px solid #e94560;
+.table-select:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: 1px;
 }
 
 .table-select optgroup {
-  background: #0d1117;
-  color: #888;
+  background: var(--bg-overlay);
+  color: var(--text-secondary);
   font-style: normal;
   font-weight: 600;
 }
 
 .table-select option {
-  background: #0d1117;
-  color: #e0e0e0;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
 }
 
 .worker-indicator {
@@ -110,7 +112,7 @@ body {
 }
 
 .worker-indicator.ready {
-  color: #4ade80;
+  color: var(--success);
 }
 
 .worker-indicator.loading {
@@ -119,9 +121,9 @@ body {
 
 .toolbar-btn {
   padding: 0.35rem 0.8rem;
-  background: #21262d;
-  color: #e0e0e0;
-  border: 1px solid #30363d;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.82rem;
   cursor: pointer;
@@ -130,8 +132,13 @@ body {
 }
 
 .toolbar-btn:hover:not(:disabled) {
-  background: #2d333b;
-  border-color: #6e7681;
+  border-color: var(--text-secondary);
+  filter: brightness(1.15);
+}
+
+.toolbar-btn:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .toolbar-btn:disabled {
@@ -140,15 +147,39 @@ body {
 }
 
 .toolbar-btn--primary {
-  background: #e94560;
-  border-color: #e94560;
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
 .toolbar-btn--primary:hover:not(:disabled) {
-  background: #c73652;
-  border-color: #c73652;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* ── Theme Toggle Button ────────────────────────────────────────────────── */
+
+.theme-toggle {
+  padding: 0.35rem 0.7rem;
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--text-secondary);
+  filter: brightness(1.15);
+}
+
+.theme-toggle:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 /* ── Main two-pane layout ───────────────────────────────────────────────── */
@@ -173,7 +204,7 @@ body {
   min-width: 280px;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid #0f3460;
+  border-left: 1px solid var(--border);
   overflow-y: auto;
 }
 
@@ -184,7 +215,7 @@ body {
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 /* ── BRF Preview ─────────────────────────────────────────────────────────── */
@@ -192,7 +223,7 @@ body {
 .brf-preview {
   flex: 1;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid #0f3460;
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -201,7 +232,7 @@ body {
 
 .preview-loading {
   font-size: 0.72rem;
-  color: #888;
+  color: var(--text-secondary);
   font-style: italic;
   text-transform: none;
   letter-spacing: normal;
@@ -211,7 +242,7 @@ body {
 .progress-bar-wrap {
   position: relative;
   height: 6px;
-  background: #21262d;
+  background: var(--bg-overlay);
   border-radius: 3px;
   margin-bottom: 0.75rem;
   overflow: visible;
@@ -219,7 +250,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: #e94560;
+  background: var(--accent);
   border-radius: 3px;
   transition: width 0.15s ease;
 }
@@ -229,25 +260,25 @@ body {
   top: 8px;
   right: 0;
   font-size: 0.68rem;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 .translation-error {
   margin: 0 0 0.5rem;
   padding: 0.4rem 0.6rem;
-  background: #2d0f0f;
-  border: 1px solid #6b0f1a;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 4px;
   font-size: 0.78rem;
-  color: #f87171;
+  color: var(--error);
 }
 
 .brf-output {
   flex: 1;
   margin: 0;
   padding: 0.6rem;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border);
   border-radius: 4px;
   /* Wide Unicode-safe font for braille dots */
   font-family: 'Segoe UI', 'Noto Sans', system-ui, sans-serif;
@@ -256,7 +287,7 @@ body {
   white-space: pre-wrap;
   word-break: break-word;
   overflow-y: auto;
-  color: #58a6ff;
+  color: var(--braille-color);
   min-height: 0;
 }
 
@@ -264,7 +295,7 @@ body {
   margin: 0;
   padding: 0.75rem;
   font-size: 0.82rem;
-  color: #555;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -280,32 +311,37 @@ body {
 .print-panel h3 {
   margin: 0;
   font-size: 0.9rem;
-  color: #ccc;
+  color: var(--text-primary);
 }
 
 .bridge-warning {
   margin: 0;
   padding: 0.4rem 0.6rem;
-  background: #2d1b0e;
-  border: 1px solid #b45309;
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
   border-radius: 4px;
   font-size: 0.75rem;
-  color: #fbbf24;
+  color: var(--warning);
 }
 
 .print-panel label {
   font-size: 0.8rem;
-  color: #aaa;
+  color: var(--text-secondary);
 }
 
 .print-panel input[type="text"] {
   width: 100%;
   padding: 0.4rem 0.6rem;
-  background: #0d1117;
-  border: 1px solid #30363d;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border);
   border-radius: 4px;
-  color: #e0e0e0;
+  color: var(--text-primary);
   font-size: 0.85rem;
+}
+
+.print-panel input[type="text"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 1px;
 }
 
 .print-panel input[type="text"]:disabled {
@@ -315,8 +351,8 @@ body {
 
 .print-panel button {
   padding: 0.5rem 1rem;
-  background: #e94560;
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-text);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -326,23 +362,29 @@ body {
 }
 
 .print-panel button:hover:not(:disabled) {
-  background: #c73652;
+  background: var(--accent-hover);
+}
+
+.print-panel button:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .print-panel button:disabled {
-  background: #333;
+  background: var(--bg-overlay);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .status-ok {
   margin: 0;
-  color: #4ade80;
+  color: var(--success);
   font-size: 0.78rem;
 }
 
 .status-err {
   margin: 0;
-  color: #f87171;
+  color: var(--error);
   font-size: 0.78rem;
 }
 
@@ -353,10 +395,10 @@ body {
   align-items: center;
   gap: 1.5rem;
   padding: 0.3rem 1rem;
-  background: #16213e;
-  border-top: 1px solid #0f3460;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border);
   font-size: 0.73rem;
-  color: #555;
+  color: var(--text-secondary);
   flex-wrap: wrap;
 }
 
@@ -365,18 +407,18 @@ body {
 }
 
 .bridge-indicator.connected {
-  color: #4ade80;
+  color: var(--success);
 }
 
 .bridge-indicator.disconnected {
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .status-stat {
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .status-progress {
-  color: #e94560;
+  color: var(--accent);
   font-family: monospace;
 }

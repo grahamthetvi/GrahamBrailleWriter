@@ -25,10 +25,16 @@ export function StatusBar({
   progress,
 }: StatusBarProps) {
   return (
-    <div className="status-bar">
+    <div
+      className="status-bar"
+      role="status"
+      aria-live="polite"
+      aria-label="Application status"
+    >
       <span
         className={`bridge-indicator ${bridgeConnected ? 'connected' : 'disconnected'}`}
         title={bridgeConnected ? 'Bridge running on localhost:8080' : 'Bridge not detected'}
+        aria-label={bridgeConnected ? 'Bridge connected' : 'Bridge offline'}
       >
         {bridgeConnected ? '● Bridge Connected' : '○ Bridge Offline'}
       </span>
