@@ -302,6 +302,16 @@ export default function App() {
           >
             {themeLabels[theme]}
           </button>
+
+          {/* Help / re-open welcome guide */}
+          <button
+            className="toolbar-btn"
+            onClick={() => setShowWelcome(true)}
+            aria-label="Open help guide"
+            title="Open the Getting Started guide"
+          >
+            ?
+          </button>
         </div>
 
         {/* Compact print bar — full-width row below the toolbar */}
