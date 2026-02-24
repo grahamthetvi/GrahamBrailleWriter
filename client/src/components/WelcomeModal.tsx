@@ -77,23 +77,47 @@ export function WelcomeModal({ onClose }: WelcomeModalProps) {
           {/* 2. Bridge App */}
           <section className="welcome-section">
             <div className="welcome-section-icon" aria-hidden="true">🖨</div>
-            <div>
-              <h3>Bridge App — Direct Embosser Printing</h3>
+            <div className="welcome-bridge-content">
+              <h3>Bridge App &mdash; Direct Embosser Printing</h3>
               <p>
-                The <strong>🖨 Print</strong> toolbar button sends braille straight to
-                a physical embosser (ViewPlus, Index, etc.), but it requires the free{' '}
-                <strong>Graham Bridge</strong> helper app running on your computer.
-                Download the right binary for your platform — Windows, macOS (Intel or
-                Apple Silicon), or Linux — and run it in the background. The status bar
-                will turn green once the editor detects the connection.
+                To print directly to an embosser, download the <strong>Graham Bridge</strong> helper app for your platform:
               </p>
-              <p>
-                With the bridge running, enter your printer name in the Print bar and
-                click <strong>Print</strong> to send a raw BRF job via CUPS
-                (macOS / Linux) or the Windows print spooler. Braille translation
-                works fully in the browser without the bridge — it is only needed for
-                direct-to-embosser printing.
-              </p>
+              
+              <div className="install-grid">
+                <div className="install-card">
+                  <h4>🪟 Windows</h4>
+                  <ol>
+                    <li>Download &amp; extract the Windows zip</li>
+                    <li>Move <code>.exe</code> to a safe folder</li>
+                    <li>Add to <strong>Startup</strong> folder</li>
+                  </ol>
+                </div>
+                <div className="install-card">
+                  <h4>🍎 macOS</h4>
+                  <ol>
+                    <li>Drag <code>.app</code> to Applications</li>
+                    <li>Right-click &rarr; <strong>Open</strong> first time</li>
+                    <li>Add to <strong>Login Items</strong></li>
+                  </ol>
+                </div>
+                <div className="install-card">
+                  <h4>🐧 Linux</h4>
+                  <ol>
+                    <li>Move binary to <code>/usr/local/bin</code></li>
+                    <li>Install <code>.desktop</code> shortcut</li>
+                    <li>Launch from app menu</li>
+                  </ol>
+                </div>
+              </div>
+
+              <div className="welcome-footer-links">
+                <a href="https://github.com/grahamthetvi/Graham_Braille_Editor/releases" target="_blank" rel="noopener noreferrer" className="welcome-btn-secondary">
+                  📥 Download Latest Release
+                </a>
+                <p className="welcome-note">
+                  The bridge is only needed for direct printing. Download &amp; translation work fully in-browser without it.
+                </p>
+              </div>
             </div>
           </section>
 

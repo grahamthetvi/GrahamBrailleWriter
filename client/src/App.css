@@ -792,3 +792,86 @@ body {
   color: var(--accent);
   font-family: monospace;
 }
+
+/* ── Installation Grid ──────────────────────────────────────────────────── */
+
+.welcome-bridge-content {
+  flex: 1;
+}
+
+.install-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin: 1.25rem 0;
+}
+
+.install-card {
+  background: var(--bg-overlay);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.install-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.install-card h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.install-card ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.install-card li:not(:last-child) {
+  margin-bottom: 0.4rem;
+}
+
+.welcome-footer-links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.welcome-btn-secondary {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background: var(--bg-overlay);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.welcome-btn-secondary:hover {
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.3);
+}
+
+.welcome-note {
+  font-size: 0.7rem !important;
+  font-style: italic;
+  opacity: 0.8;
+}
