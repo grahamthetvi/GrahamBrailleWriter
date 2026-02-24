@@ -29,8 +29,8 @@ cat <<EOF > "$CONTENTS_DIR/Info.plist"
 EOF
 
 echo "Building Universal macOS Binary..."
-GOOS=darwin GOARCH=amd64 go build -o bridge-amd64 .
-GOOS=darwin GOARCH=arm64 go build -o bridge-arm64 .
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o bridge-amd64 .
+CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o bridge-arm64 .
 
 # Use lipo to create a universal binary if available, otherwise fallback to arm64
 if command -v lipo >/dev/null 2>&1; then

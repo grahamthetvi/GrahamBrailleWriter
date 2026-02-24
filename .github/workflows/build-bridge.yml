@@ -33,12 +33,22 @@ jobs:
         go build -o braillevibe-bridge-linux .
         zip -r braillevibe-bridge-linux.zip braillevibe-bridge-linux braillevibe-bridge.desktop
 
+    - name: Setup MSYS2 (Windows)
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: gcc base-devel
+
     - name: Build Bridge (Windows)
       if: runner.os == 'Windows'
       run: |
         cd bridge
         go build -ldflags -H=windowsgui -o braillevibe-bridge-windows.exe .
         Compress-Archive -Path braillevibe-bridge-windows.exe -DestinationPath braillevibe-bridge-windows.zip
+      env:
+        CGO_ENABLED: 1
         
     - name: Build Bridge (macOS)
       if: runner.os == 'macOS'
@@ -47,6 +57,8 @@ jobs:
         chmod +x build-macos.sh
         ./build-macos.sh
         zip -r braillevibe-bridge-macos.zip "Braille Vibe Bridge.app"
+      env:
+        CGO_ENABLED: 1
         
     - name: Upload Artifact (Linux)
       if: runner.os == 'Linux'
