@@ -44,14 +44,13 @@ jobs:
 
     - name: Build Bridge (Windows)
       if: runner.os == 'Windows'
-      shell: msys2 {0}
       run: |
         cd bridge
-        export PATH="/ucrt64/bin:$PATH"
-        go build -ldflags "-H windowsgui" -o graham-bridge-windows.exe .
-        powershell -Command "Compress-Archive -Path graham-bridge-windows.exe -DestinationPath graham-bridge-windows.zip"
+        go build -ldflags="-H windowsgui" -o graham-bridge-windows.exe .
+        Compress-Archive -Path graham-bridge-windows.exe -DestinationPath graham-bridge-windows.zip
       env:
         CGO_ENABLED: 1
+        CC: C:\msys64\ucrt64\bin\gcc.exe
 
     - name: Build Bridge (macOS)
       if: runner.os == 'macOS'
