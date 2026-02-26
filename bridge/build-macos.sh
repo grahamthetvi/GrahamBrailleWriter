@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_NAME="Braille Vibe Bridge.app"
+APP_NAME="Graham Bridge.app"
 CONTENTS_DIR="$APP_NAME/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
 
@@ -17,9 +17,9 @@ cat <<EOF > "$CONTENTS_DIR/Info.plist"
 	<key>CFBundleExecutable</key>
 	<string>bridge</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.grahamthetvi.braillevibebridge</string>
+	<string>com.grahamthetvi.grahambridge</string>
 	<key>CFBundleName</key>
-	<string>Braille Vibe Bridge</string>
+	<string>Graham Bridge</string>
 	<key>CFBundleVersion</key>
 	<string>1.0</string>
 	<key>LSUIElement</key>
@@ -29,17 +29,17 @@ cat <<EOF > "$CONTENTS_DIR/Info.plist"
 EOF
 
 echo "Building Universal macOS Binary..."
-CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o bridge-amd64 .
-CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o bridge-arm64 .
+CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o graham-bridge-amd64 .
+CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o graham-bridge-arm64 .
 
 # Use lipo to create a universal binary if available, otherwise fallback to arm64
 if command -v lipo >/dev/null 2>&1; then
-    lipo -create -output "$MACOS_DIR/bridge" bridge-amd64 bridge-arm64
+    lipo -create -output "$MACOS_DIR/bridge" graham-bridge-amd64 graham-bridge-arm64
 else
     echo "Warning: lipo not found, using arm64 binary"
-    cp bridge-arm64 "$MACOS_DIR/bridge"
+    cp graham-bridge-arm64 "$MACOS_DIR/bridge"
 fi
 
-rm -f bridge-amd64 bridge-arm64
+rm -f graham-bridge-amd64 graham-bridge-arm64
 
 echo "Done! The app bundle is in $APP_NAME"
