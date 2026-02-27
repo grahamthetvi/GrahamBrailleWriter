@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getStaticDots } from '../utils/staticBraille';
-import '../../PerkinsViewer.css';
+import '../PerkinsViewer.css';
 
 interface PerkinsViewerProps {
     rawText: string;
